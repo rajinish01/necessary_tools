@@ -1,0 +1,131 @@
+" INSTALLATION:
+" https://github.com/junegunn/vim-plug#installation
+
+if empty(glob('~/.vim/autoload/plug.vim'))
+          silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+              \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+            autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+    endif
+call plug#begin('~/.vim/plugged')
+
+" Configure plugin managed vim-plug
+" and the vim plugins to install and manage
+" automatically
+call plug#begin('~/.vim/plugged')
+Plug 'fatih/vim-go'
+Plug 'preservim/nerdtree'
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'morhetz/gruvbox'
+Plug 'vim-scripts/taglist.vim'
+Plug 'bronson/vim-trailing-whitespace'
+Plug 'airblade/vim-gitgutter'
+Plug 'mileszs/ack.vim'
+Plug 'tpope/vim-markdown'
+Plug 'vim-scripts/LargeFile'
+Plug 'elzr/vim-json'
+Plug 'jparise/vim-graphql'
+Plug 'python/black'
+Plug 'Chiel92/vim-autoformat'
+call plug#end()
+
+" show status bar always (even for single window)
+set laststatus=2
+
+"set textwidth for markdown files
+autocmd Filetype markdown :set textwidth=80
+
+" Enable file type recognition
+filetype plugin on
+
+"replace tabs by spaces
+set expandtab
+
+"4 spaces for a tab
+set tabstop=4
+
+"4 spaces to be deleted on a backspace
+set softtabstop=4
+
+set autoindent
+
+"higlight search matches
+set hls
+
+"incremental search
+set is
+
+"Turn on syntax highlighting
+syntax on
+
+"Make backspace behave properly
+set backspace=eol,start,indent
+
+"Indentation to happen by 4 spaces
+set shiftwidth=4
+
+"color scheme for graphical version
+"colorscheme gruvbox
+
+"Set dark background
+set background=dark
+
+" Do not force me to write a buffer to disk when switching to
+" another buffer
+set hidden
+
+" Show a column line at 80
+set colorcolumn=80
+highlight ColorColumn ctermbg=7
+
+" map <F5> to toggle NERDTree window
+nmap <silent> <F5> :NERDTreeToggle<CR>
+
+" map <F6> to toggle taglist window
+nmap <silent> <F6> :Tlist<CR>
+
+" Remember things between sessions
+"
+" '20 - remember marks for 20 previous files
+" \"50 - save 50 lines for each register
+" :50 - remember 20 items in command-line history
+" % - remember the buffer list (if vim started without a file arg)
+" n - set name of viminfo file
+set viminfo='20,\"100,:50,%,n~/.vim/.viminfo
+
+" restore position to the last line visited in the file
+au BufReadPost * if line("'\"") > 0|if line("'\"") <= line("$")|exe("norm '\"")|else|exe "norm$"|endif|endif
+
+" set gui font
+set guifont=Inconsolata\ 12
+
+" folding options
+set foldmethod=indent
+set foldlevel=99
+set foldnestmax=2
+set foldminlines=0
+noremap <space> za
+
+set scrolloff=999
+
+" Avoid "crontab: temp file must be edited in place
+" http://calebthompson.io/crontab-and-vim-sitting-in-a-tree/
+autocmd filetype crontab setlocal nobackup nowritebackup
+
+" disable hiding of json matter
+let g:vim_json_syntax_conceal = 0
+
+" Make deepql files behave like graphql files
+autocmd! BufRead,BufNewFile *.deepql set filetype=graphql
+
+" Run black formatter on save for Python files
+autocmd BufWritePost *.py execute ':Black'
+
+" Open Nerdtree
+map <C-n> :NERDTreeToggle<CR>
+
+" SQL auto format
+" au BufWrite *.sql :Autoformat
+" let g:formatdef_sql = '"sqlformat --reindent --keywords upper - identifiers lower -"'
+" let g:formatters_sql = ['sql']
+
+set nu
