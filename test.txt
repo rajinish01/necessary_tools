@@ -2,3 +2,6 @@
 
 issuing comment with the ER-498
 random data
+ER=123
+ST=123
+TE-124
