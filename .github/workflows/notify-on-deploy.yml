@@ -26,4 +26,3 @@ jobs:
             TICKETS="No Jira tickets referenced"
           fi
           echo "tickets=$TICKETS" >> $GITHUB_OUTPUT
-
