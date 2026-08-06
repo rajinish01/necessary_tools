@@ -24,7 +24,7 @@
 #
 
 
-name: Jira Summary Email on UAT to Main Merge
+name: Notify Teams
 
 on:
   pull_request:
@@ -37,17 +37,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo (full history)
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Extract unique Jira ticket IDs from merged commits
+      - name: Extract Jira ticket IDs from merged commits
         id: extract
         run: |
-          git log --pretty=format:"%s" \
-            ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} \
-            > commit_messages.txt
+          git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} > commit_messages.txt
 
           # Restrict to known project prefixes to avoid false positives.
           # Add/remove prefixes here as needed.
