@@ -1,28 +1,79 @@
-name: Notify Stakeholders on Production Deploy
+#name: Notify Stakeholders on Production Deploy
+#on:
+#  push:
+#    branches:
+#      - main
+#jobs:
+#  notify-stakeholders:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 0
+#      - name: Extract Jira Ticket IDs from Current Push
+#        id: extract_tickets
+#        run: |
+#          # Scan only the commits in this exact push
+#          TICKETS=$(git log ${{ github.event.before }}..${{ github.sha }} --pretty=format:"%s" | grep -oE '[A-Z]+-[0-9]+' | sort -u | tr '\n' ', ' | sed 's/,$//')
+#          # Fallback if no tickets found
+#          if [ -z "$TICKETS" ]; then
+#            TICKETS="No Jira tickets referenced"
+#          fi
+#          echo "tickets=$TICKETS" >> $GITHUB_OUTPUT
+#
+
+
+name: Jira Summary Email on UAT to Main Merge
+
 on:
-  push:
-    branches:
-      - main
+  pull_request:
+    types: [closed]
+    branches: [main]
+
 jobs:
-  notify-stakeholders:
+  send-jira-summary:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'uat'
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repo (full history)
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Extract Jira Ticket IDs from Current Push
-        id: extract_tickets
+
+      - name: Extract Jira ticket IDs from merged commits
+        id: extract
         run: |
-          # Scan only the commits in this exact push
-          TICKETS=$(git log ${{ github.event.before }}..${{ github.sha }} \
-            --pretty=format:"%s" | \
-            grep -oE '[A-Z]+-[0-9]+' | \
-            sort -u | \
-            tr '\n' ', ' | \
-            sed 's/,$//')
-          # Fallback if no tickets found
+          git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} > commit_messages.txt
+
+          TICKETS=$(grep -oE '[A-Z][A-Z0-9]+-[0-9]+' commit_messages.txt | sort -u)
+
           if [ -z "$TICKETS" ]; then
-            TICKETS="No Jira tickets referenced"
+            TICKETS="No Jira ticket references found in commit messages."
           fi
-          echo "tickets=$TICKETS" >> $GITHUB_OUTPUT
+
+          {
+            echo "tickets<<EOF"
+            echo "$TICKETS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          #- name: Send summary email
+          #  uses: dawidd6/action-send-mail@v3
+          #  with:
+          #    server_address: smtp.gmail.com   # or your SMTP provider
+          #    server_port: 465
+          #    username: ${{ secrets.MAIL_USERNAME }}
+          #    password: ${{ secrets.MAIL_PASSWORD }}
+          #    subject: "UAT → Main Merge: Jira Summary (PR #${{ github.event.pull_request.number }})"
+          #    to: your-team@example.com
+          #    from: CI Bot <ci@example.com>
+          #    body: |
+          #      PR #${{ github.event.pull_request.number }} (${{ github.event.pull_request.title }})
+          #      was merged from uat into main.
+
+          #      Jira tickets included in this release:
+          #      ${{ steps.extract.outputs.tickets }}
+
+          #      PR link: ${{ github.event.pull_request.html_url }}
