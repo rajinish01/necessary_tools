@@ -33,7 +33,7 @@ on:
 
 jobs:
   send-jira-summary:
-    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'uat'
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'develop'
     runs-on: ubuntu-latest
 
     steps:
