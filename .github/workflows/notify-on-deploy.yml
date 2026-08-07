@@ -27,7 +27,7 @@ jobs:
 
           # Restrict to known project prefixes to avoid false positives.
           # Add/remove prefixes here as needed.
-          PREFIXES="ER|ST|TE"
+          PREFIXES="ER|ST|CS|TE"
 
           TICKETS=$(grep -oE "(${PREFIXES})-[0-9]+" commit_messages.txt | sort -u -t- -k2,2n)
 
@@ -44,71 +44,54 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Ensure AWS CLI is installed
+        run: |
+          if ! command -v aws &> /dev/null; then
+            echo "AWS CLI not found, installing..."
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip -q awscliv2.zip
+            sudo ./aws/install
+          else
+            echo "AWS CLI already installed: $(aws --version)"
+          fi
 
 
-# name: Notify Teams
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-# on:
-#   workflow_dispatch:
-#   pull_request:
-#     types: [closed]
-#     branches: [main]
+      - name: Build email body file
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          SOURCE_BRANCH : ${{ github.event.pull_request.head.ref }}
 
-# jobs:
-#   send-jira-summary:
-#     if: >
-#       (
-#         github.event.pull_request.merged == true &&
-#         github.event.pull_request.base.ref == 'main' &&
-#         github.event.pull_request.head.ref == 'develop'
-#       )
-#     runs-on: ubuntu-latest
 
-#     steps:
-#       - name: Checkout repo
-#         uses: actions/checkout@v4
-#         with:
-#           fetch-depth: 0
+        run: |
+          cat > body.json << EOF
+          {
+            "Simple": {
+              "Subject": { "Data": "Code changes pushed from ${{ env.SOURCE_BRANCH }} to ${{ env.BASE_BRANCH }} branch 🚀. Jira Summary (PR #${{ env.PR_NUMBER }})" },
+              "Body": {
+                "Text": {
+                  "Data": "PR #${{ env.PR_NUMBER }} (${{ env.PR_TITLE }}) was merged from revamp into revamp-master.\n\nJira tickets included in this release:\n${{ steps.extract.outputs.tickets }}\n\nPR link: ${{ env.PR_URL }}"
+                }
+              }
+            }
+          }
+          EOF
 
-#       - name: Extract Jira ticket IDs from merged commits
-#         id: extract
-#         run: |
-#           git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} > commit_messages.txt
 
-#           # Restrict to known project prefixes to avoid false positives.
-#           # Add/remove prefixes here as needed.
-#           PREFIXES="ER|ST|TE"
+      - name: Send summary email via SES CLI
+        run: |
+          CLEAN_TO_ADDRESSES=$(echo "${{ secrets.TO_ADDRESSES }}" | tr -d '[:space:]')
 
-#           TICKETS=$(grep -oE "(${PREFIXES})-[0-9]+" commit_messages.txt | sort -u -t- -k2,2n)
-
-#           if [ -z "$TICKETS" ]; then
-#             TICKETS="No Jira ticket references found in commit messages."
-#           fi
-
-#           echo "Extracted tickets:"
-#           echo "$TICKETS"
-
-#           {
-#             echo "tickets<<EOF"
-#             echo "$TICKETS"
-#             echo "EOF"
-#           } >> "$GITHUB_OUTPUT"
-
-          #- name: Send summary email
-          #  uses: dawidd6/action-send-mail@v3
-          #  with:
-          #    server_address: smtp.gmail.com   # or your SMTP provider
-          #    server_port: 465
-          #    username: ${{ secrets.MAIL_USERNAME }}
-          #    password: ${{ secrets.MAIL_PASSWORD }}
-          #    subject: "UAT → Main Merge: Jira Summary (PR #${{ github.event.pull_request.number }})"
-          #    to: your-team@example.com
-          #    from: CI Bot <ci@example.com>
-          #    body: |
-          #      PR #${{ github.event.pull_request.number }} (${{ github.event.pull_request.title }})
-          #      was merged from uat into main.
-
-          #      Jira tickets included in this release:
-          #      ${{ steps.extract.outputs.tickets }}
-
-          #      PR link: ${{ github.event.pull_request.html_url }}
+          aws sesv2 send-email \
+            --from-email-address "support@eshipz.com" \
+            --destination "ToAddresses=${CLEAN_TO_ADDRESSES}" \
+            --content file://body.json
