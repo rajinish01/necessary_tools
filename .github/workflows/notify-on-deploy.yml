@@ -27,7 +27,7 @@ jobs:
 
           # Restrict to known project prefixes to avoid false positives.
           # Add/remove prefixes here as needed.
-          PREFIXES="ER|ST|CS|TE"
+          PREFIXES="ER|ST|CS|TE|TS"
 
           TICKETS=$(grep -oE "(${PREFIXES})-[0-9]+" commit_messages.txt | sort -u -t- -k2,2n)
 
@@ -40,7 +40,7 @@ jobs:
 
           {
             echo "tickets<<EOF"
-            echo "$TICKETS"
+            echo "https://eshipz.atlassian.net/browse/$TICKETS"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
@@ -76,10 +76,10 @@ jobs:
           cat > body.json << EOF
           {
             "Simple": {
-              "Subject": { "Data": "Code changes pushed from ${{ env.SOURCE_BRANCH }} to ${{ env.BASE_BRANCH }} branch 🚀. Jira Summary (PR #${{ env.PR_NUMBER }})" },
+              "Subject": { "Data": "Jira tickets merged from ${{ env.SOURCE_BRANCH }} into ${{ env.BASE_BRANCH }}" },
               "Body": {
                 "Text": {
-                  "Data": "PR #${{ env.PR_NUMBER }} (${{ env.PR_TITLE }}) was merged from revamp into revamp-master.\n\nJira tickets included in this release:\n${{ steps.extract.outputs.tickets }}\n\nPR link: ${{ env.PR_URL }}"
+                  "Data": "Hi Team,\n\n\n\nJira tickets included in this release:\n${{ steps.extract.outputs.tickets }}\n\nSource PR: ${{ env.PR_URL }}"
                 }
               }
             }
