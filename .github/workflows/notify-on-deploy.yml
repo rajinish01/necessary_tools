@@ -32,15 +32,17 @@ jobs:
           TICKETS=$(grep -oE "(${PREFIXES})-[0-9]+" commit_messages.txt | sort -u -t- -k2,2n)
 
           if [ -z "$TICKETS" ]; then
-            TICKETS="No Jira ticket references found in commit messages."
+            TICKET_LINKS="No Jira ticket references found in commit messages."
+          else
+            TICKET_LINKS=$(echo "$TICKETS" | sed 's|^|https://eshipz.atlassian.net/browse/|')
           fi
 
           echo "Extracted tickets:"
-          echo "$TICKETS"
+          echo "$TICKET_LINKS"
 
           {
             echo "tickets<<EOF"
-            echo "https://eshipz.atlassian.net/browse/$TICKETS"
+            echo "$TICKET_LINKS"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
@@ -55,7 +57,6 @@ jobs:
             echo "AWS CLI already installed: $(aws --version)"
           fi
 
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -69,23 +70,29 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
-          SOURCE_BRANCH : ${{ github.event.pull_request.head.ref }}
-
-
+          SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
+          TICKETS: ${{ steps.extract.outputs.tickets }}
         run: |
-          cat > body.json << EOF
-          {
-            "Simple": {
-              "Subject": { "Data": "Jira tickets merged from ${{ env.SOURCE_BRANCH }} into ${{ env.BASE_BRANCH }}" },
-              "Body": {
-                "Text": {
-                  "Data": "Hi Team,\n\n\n\nJira tickets included in this release:\n${{ steps.extract.outputs.tickets }}\n\nSource PR: ${{ env.PR_URL }}"
-                }
-              }
-            }
-          }
-          EOF
+          SUBJECT="Jira tickets merged from ${SOURCE_BRANCH} into ${BASE_BRANCH}"
+          BODY_TEXT="Hi Team,
 
+          Jira tickets included in this release:
+          ${TICKETS}
+
+          Source PR: ${PR_URL}"
+
+          jq -n \
+            --arg subject "$SUBJECT" \
+            --arg body "$BODY_TEXT" \
+            '{
+              Simple: {
+                Subject: { Data: $subject },
+                Body: { Text: { Data: $body } }
+              }
+            }' > body.json
+
+          echo "Generated body.json:"
+          cat body.json
 
       - name: Send summary email via SES CLI
         run: |

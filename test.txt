@@ -2,18 +2,6 @@
 
 issuing comment with the ER-498
 random data
-ER=123
-ST=123
-TE-124
-
-
-ER-1234
-TE-125
-ER-555 again ER-554
-ER-553
-ER-663
-ER-664
-ER-665
 ST-351
 ER-745
 ST-123
