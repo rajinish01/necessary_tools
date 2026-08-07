@@ -1,29 +1,3 @@
-#name: Notify Stakeholders on Production Deploy
-#on:
-#  push:
-#    branches:
-#      - main
-#jobs:
-#  notify-stakeholders:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#        with:
-#          fetch-depth: 0
-#      - name: Extract Jira Ticket IDs from Current Push
-#        id: extract_tickets
-#        run: |
-#          # Scan only the commits in this exact push
-#          TICKETS=$(git log ${{ github.event.before }}..${{ github.sha }} --pretty=format:"%s" | grep -oE '[A-Z]+-[0-9]+' | sort -u | tr '\n' ', ' | sed 's/,$//')
-#          # Fallback if no tickets found
-#          if [ -z "$TICKETS" ]; then
-#            TICKETS="No Jira tickets referenced"
-#          fi
-#          echo "tickets=$TICKETS" >> $GITHUB_OUTPUT
-#
-
-
 name: Notify Teams
 
 on:
