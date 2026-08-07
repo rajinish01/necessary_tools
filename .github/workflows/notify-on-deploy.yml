@@ -9,12 +9,9 @@ on:
 jobs:
   send-jira-summary:
     if: >
-      github.event_name == 'workflow_dispatch' ||
-      (
-        github.event.pull_request.merged == true &&
-        github.event.pull_request.base.ref == 'main' &&
-        github.event.pull_request.head.ref == 'develop'
-      )
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'develop'
     runs-on: ubuntu-latest
 
     steps:
@@ -49,22 +46,53 @@ jobs:
 
 
 
-            #- name: Extract Jira ticket IDs from merged commits
-            #  id: extract
-            #  run: |
-            #    git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} > commit_messages.txt
+# name: Notify Teams
 
-            #    TICKETS=$(grep -oE '[A-Z][A-Z0-9]+-[0-9]+' commit_messages.txt | sort -u)
+# on:
+#   workflow_dispatch:
+#   pull_request:
+#     types: [closed]
+#     branches: [main]
 
-            #    if [ -z "$TICKETS" ]; then
-            #      TICKETS="No Jira ticket references found in commit messages."
-            #    fi
+# jobs:
+#   send-jira-summary:
+#     if: >
+#       (
+#         github.event.pull_request.merged == true &&
+#         github.event.pull_request.base.ref == 'main' &&
+#         github.event.pull_request.head.ref == 'develop'
+#       )
+#     runs-on: ubuntu-latest
 
-            #    {
-            #      echo "tickets<<EOF"
-            #      echo "$TICKETS"
-            #      echo "EOF"
-            #    } >> "$GITHUB_OUTPUT"
+#     steps:
+#       - name: Checkout repo
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+
+#       - name: Extract Jira ticket IDs from merged commits
+#         id: extract
+#         run: |
+#           git log --pretty=format:"%s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} > commit_messages.txt
+
+#           # Restrict to known project prefixes to avoid false positives.
+#           # Add/remove prefixes here as needed.
+#           PREFIXES="ER|ST|TE"
+
+#           TICKETS=$(grep -oE "(${PREFIXES})-[0-9]+" commit_messages.txt | sort -u -t- -k2,2n)
+
+#           if [ -z "$TICKETS" ]; then
+#             TICKETS="No Jira ticket references found in commit messages."
+#           fi
+
+#           echo "Extracted tickets:"
+#           echo "$TICKETS"
+
+#           {
+#             echo "tickets<<EOF"
+#             echo "$TICKETS"
+#             echo "EOF"
+#           } >> "$GITHUB_OUTPUT"
 
           #- name: Send summary email
           #  uses: dawidd6/action-send-mail@v3
