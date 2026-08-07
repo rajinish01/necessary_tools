@@ -89,7 +89,7 @@ jobs:
 
       - name: Send summary email via SES CLI
         run: |
-          CLEAN_TO_ADDRESSES=$(echo "${{ secrets.TO_ADDRESSES }}" | tr -d '[:space:]')
+          CLEAN_TO_ADDRESSES=$(echo "${{ vars.TO_ADDRESSES }}" | tr -d '[:space:]')
 
           aws sesv2 send-email \
             --from-email-address "support@eshipz.com" \
