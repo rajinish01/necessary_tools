@@ -1,0 +1,65 @@
+name: Lint & Security Checks
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  ruff:
+    name: Ruff Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff on changed files
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.py')
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No Python files changed."
+            exit 0
+          fi
+
+          echo "Linting changed files:"
+          echo "$CHANGED_FILES"
+          ruff check $CHANGED_FILES
+
+  bandit:
+    name: Bandit Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install bandit
+        run: pip install bandit
+
+      - name: Run bandit on changed files
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.py')
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No Python files changed."
+            exit 0
+          fi
+
+          echo "Scanning changed files:"
+          echo "$CHANGED_FILES"
+          bandit $CHANGED_FILES
