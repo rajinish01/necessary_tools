@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: ${{ github.event.pull_request.commits + 1 }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -41,6 +43,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: ${{ github.event.pull_request.commits + 1 }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
