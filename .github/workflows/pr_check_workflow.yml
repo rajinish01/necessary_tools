@@ -6,19 +6,30 @@ on:
       - develop
 
 jobs:
+  setup:
+    name: Compute Fetch Depth
+    runs-on: ubuntu-latest
+    outputs:
+      fetch_depth: ${{ steps.depth.outputs.fetch_depth }}
+    steps:
+      - name: Compute fetch depth
+        id: depth
+        run: echo "fetch_depth=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> "$GITHUB_OUTPUT"
+
   ruff:
     name: Ruff Lint
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: ${{ github.event.pull_request.commits + 1 }}
+          fetch-depth: ${{ needs.setup.outputs.fetch_depth }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install ruff
         run: pip install ruff
@@ -39,17 +50,18 @@ jobs:
 
   bandit:
     name: Bandit Security Scan
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: ${{ github.event.pull_request.commits + 1 }}
+          fetch-depth: ${{ needs.setup.outputs.fetch_depth }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install bandit
         run: pip install bandit
