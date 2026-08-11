@@ -3,7 +3,7 @@ name: Lint & Security Checks
 on:
   pull_request:
     branches:
-      - dev
+      - develop
 
 jobs:
   ruff:
