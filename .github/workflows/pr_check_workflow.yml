@@ -29,7 +29,7 @@ jobs:
 
       - name: Run ruff on changed files
         run: |
-          CHANGED_FILES=$(git diff --name-only origin/pr-base origin/pr-head -- '*.py')
+          CHANGED_FILES=$(git diff --name-only origin/pr-base origin/pr-head | grep '\.py$' || true)
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No Python files changed."
@@ -63,7 +63,7 @@ jobs:
 
       - name: Run bandit on changed files
         run: |
-          CHANGED_FILES=$(git diff --name-only origin/pr-base origin/pr-head -- '*.py')
+          CHANGED_FILES=$(git diff --name-only origin/pr-base origin/pr-head | grep '\.py$' || true)
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No Python files changed."
@@ -72,4 +72,4 @@ jobs:
 
           echo "Scanning changed files:"
           echo "$CHANGED_FILES"
-          bandit $CHANGED_FILES
+          bandit -v $CHANGED_FILES
