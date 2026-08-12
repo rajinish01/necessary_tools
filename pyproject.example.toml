@@ -1,0 +1,140 @@
+#########################################
+## RUFF CONFIGURATION
+## Docs: https://docs.astral.sh/ruff/configuration/
+#########################################
+#
+#[tool.ruff]
+## Max line length (default: 88)
+#line-length = 100
+#
+## Minimum Python version your code should be compatible with
+#target-version = "py312"          # options: py37 - py313
+#
+## Directories/files to exclude entirely (glob patterns supported)
+#exclude = [
+#    ".git",
+#    ".venv",
+#    "venv",
+#    "__pycache__",
+#    "build",
+#    "dist",
+#    "migrations",
+#    "tests/fixtures",
+#    "*.generated.py",
+#]
+#
+## Also respect .gitignore patterns automatically (default: true)
+#respect-gitignore = true
+#
+## Fix issues automatically when running `ruff check --fix` (default: false unless --fix passed)
+#fix = false
+#
+## Show fixes that WOULD be applied without applying them
+## (use `ruff check --diff` on CLI instead of a config option)
+#
+## Cache directory for ruff (rarely need to change)
+#cache-dir = ".ruff_cache"
+#
+## ---- Linting rules ----
+#[tool.ruff.lint]
+## Rule sets to enable. Common ones:
+## E   = pycodestyle errors
+## W   = pycodestyle warnings
+## F   = pyflakes (unused imports/vars, undefined names)
+## I   = isort (import sorting)
+## N   = pep8-naming
+## UP  = pyupgrade (modernize syntax)
+## B   = flake8-bugbear (likely bugs)
+## C4  = flake8-comprehensions
+## SIM = flake8-simplify
+## S   = flake8-bandit (security lint rules duplicating some bandit checks)
+## ANN = flake8-annotations (require type hints)
+#select = ["E", "F", "I", "N", "UP", "B", "C4"]
+#
+## Rules to ignore even if selected above
+#ignore = [
+#    "E501",   # line too long (if you don't want to enforce line-length strictly)
+#    "B008",   # function calls in default arguments
+#]
+#
+## Rules to enable automatically as "preview" (unstable/new rules)
+#preview = false
+#
+## Per-file ignores — great for tests, __init__.py, migrations, etc.
+#[tool.ruff.lint.per-file-ignores]
+#"__init__.py" = ["F401"]          # allow unused imports in __init__ files
+#"tests/*.py" = ["S101", "ANN"]    # allow asserts + skip type-hint checks in tests
+#"migrations/*.py" = ["E501", "N806"]
+#
+## Import sorting behavior (isort-equivalent)
+#[tool.ruff.lint.isort]
+#known-first-party = ["your_package_name"]
+#combine-as-imports = true
+#
+## Docstring convention if using pydocstyle rules ("D")
+#[tool.ruff.lint.pydocstyle]
+#convention = "google"             # options: google, numpy, pep257
+#
+## McCabe complexity threshold if using "C90" rules
+#[tool.ruff.lint.mccabe]
+#max-complexity = 10
+#
+## ---- Formatting (ruff format, similar to black) ----
+#[tool.ruff.format]
+#quote-style = "double"            # options: double, single
+#indent-style = "space"            # options: space, tab
+#skip-magic-trailing-comma = false
+#line-ending = "auto"              # options: auto, lf, cr-lf, native
+#
+#
+#########################################
+## BANDIT CONFIGURATION
+## Docs: https://bandit.readthedocs.io/en/latest/config.html
+#########################################
+#
+#[tool.bandit]
+## Directories or specific files to exclude
+#exclude_dirs = [
+#    "tests",
+#    "migrations",
+#    "venv",
+#    ".venv",
+#    "build",
+#    "dist",
+#    "scripts/legacy_migration.py",   # individual files also work here
+#]
+#
+## Specific check IDs to skip repo-wide (by ID, comma-separated list in TOML array)
+## Common ones:
+## B101 = assert_used
+## B104 = hardcoded_bind_all_interfaces
+## B105 = hardcoded_password_string
+## B301 = pickle usage
+## B303 = MD5/insecure hash usage
+## B307 = eval usage
+## B602 = subprocess with shell=True
+## B605 = start_process_with_a_shell / os.popen
+#skips = ["B101"]
+#
+## Only run these specific checks (alternative to skips — use one or the other, not both)
+## tests = ["B201", "B301"]
+#
+## Confidence level filter: only report findings at or above this confidence
+## options: LOW, MEDIUM, HIGH
+## (Set via CLI: bandit -i for low+ or -ii for medium+, not usually set in TOML)
+#
+## Severity level filter also typically set via CLI flags:
+## bandit -lll  -> only HIGH severity
+## bandit -ll   -> MEDIUM and above
+## bandit -l    -> LOW and above (default: all)
+#
+## Per-test configuration (some checks accept extra options)
+#[tool.bandit.assert_used]
+#skips = ["*/test_*.py", "*/tests/*.py"]   # don't flag asserts in test files
+#
+#[tool.bandit.hardcoded_tmp_directory]
+#tmp_dirs = ["/tmp", "/var/tmp", "/dev/shm"]
+#
+#[tool.bandit.hardcoded_password]
+## You can list variable names bandit should specifically watch for
+#word_list = ["password", "secret", "token", "api_key"]

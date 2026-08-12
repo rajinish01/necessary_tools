@@ -6,25 +6,18 @@ on:
       - develop
 
 jobs:
-  setup:
-    name: Compute Fetch Depth
-    runs-on: ubuntu-latest
-    outputs:
-      fetch_depth: ${{ steps.depth.outputs.fetch_depth }}
-    steps:
-      - name: Compute fetch depth
-        id: depth
-        run: echo "fetch_depth=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> "$GITHUB_OUTPUT"
-
   ruff:
     name: Ruff Lint
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: ${{ needs.setup.outputs.fetch_depth }}
+
+      - name: Fetch base and head commits
+        run: |
+          git fetch --no-tags --prune origin \
+            +${{ github.event.pull_request.base.sha }}:refs/remotes/origin/pr-base \
+            +${{ github.event.pull_request.head.sha }}:refs/remotes/origin/pr-head
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -36,8 +29,7 @@ jobs:
 
       - name: Run ruff on changed files
         run: |
-          git fetch origin ${{ github.base_ref }}
-          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.py')
+          CHANGED_FILES=$(git diff --name-only origin/pr-base origin/pr-head -- '*.py')
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No Python files changed."
@@ -50,13 +42,16 @@ jobs:
 
   bandit:
     name: Bandit Security Scan
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: ${{ needs.setup.outputs.fetch_depth }}
+
+      - name: Fetch base and head commits
+        run: |
+          git fetch --no-tags --prune origin \
+            +${{ github.event.pull_request.base.sha }}:refs/remotes/origin/pr-base \
+            +${{ github.event.pull_request.head.sha }}:refs/remotes/origin/pr-head
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -68,8 +63,7 @@ jobs:
 
       - name: Run bandit on changed files
         run: |
-          git fetch origin ${{ github.base_ref }}
-          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.py')
+          CHANGED_FILES=$(git diff --name-only origin/pr-base origin/pr-head -- '*.py')
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No Python files changed."
