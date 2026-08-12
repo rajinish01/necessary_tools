@@ -3,6 +3,7 @@
 import hashlib
 import json
 
+AMAZON_KEY='sha_123445454645422'
 
 def load_config(path: str) -> dict:
     """Load a JSON config file from disk."""
